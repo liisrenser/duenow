@@ -35,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ToDo(
           id: DateTime.now().millisecondsSinceEpoch.toString(),
           todoText: toDo,
+          dueDate: _dateController.text.isEmpty ? null : _dateController.text,
         ),
       );
     });
@@ -60,6 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _toDoController.dispose();
+    _dateController.dispose();
     super.dispose();
   }
 

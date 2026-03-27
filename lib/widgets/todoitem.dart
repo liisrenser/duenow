@@ -34,6 +34,15 @@ class ToDoItem extends StatelessWidget {
             fontSize: 16,
             decoration: todo.isDone? TextDecoration.lineThrough: null,
           )),
+          subtitle: todo.dueDate != null && todo.dueDate!.isNotEmpty
+            ? Text(
+                'Due: ${todo.dueDate}',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.black54,
+                ),
+              )
+            : null,
           trailing: Container(
             height: 35,
             width: 35,
