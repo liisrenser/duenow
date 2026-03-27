@@ -18,6 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _handleToDoChange(ToDo todo) {
     setState(() {
       todo.isDone = !todo.isDone;
+      _sortToDos();
     });
   }
 
@@ -61,6 +62,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _sortToDos() {
     todosList.sort((a, b) {
+      if (a.isDone != b.isDone) {
+      return a.isDone ? 1 : -1;
+    }
     if (a.dueDate == null && b.dueDate == null) return 0;
     if (a.dueDate == null) return 1;
     if (b.dueDate == null) return -1;
