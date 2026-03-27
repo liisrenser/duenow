@@ -18,6 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _handleToDoChange(ToDo todo) {
     setState(() {
       todo.isDone = !todo.isDone;
+      _sortToDos();
     });
   }
 
@@ -29,6 +30,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _addToDoItem(String toDo) {
     if (toDo.trim().isEmpty) return;
+
+    final selectedDueDate =
+      _dateController.text.isEmpty ? null : _dateController.text;
+
+    if (_isDuplicateTask(toDo, selectedDueDate)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('This task already exists for the selected date'),
+        ),
+      );
+      return;
+    }
 
     setState(() {
       todosList.add(
@@ -61,6 +74,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _sortToDos() {
     todosList.sort((a, b) {
+      if (a.isDone != b.isDone) {
+      return a.isDone ? 1 : -1;
+    }
     if (a.dueDate == null && b.dueDate == null) return 0;
     if (a.dueDate == null) return 1;
     if (b.dueDate == null) return -1;
@@ -70,6 +86,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return dateA.compareTo(dateB);
     });
+  }
+
+  bool _isDuplicateTask(String toDo, String? dueDate) {
+  return todosList.any(
+    (item) =>
+        item.todoText!.trim().toLowerCase() == toDo.trim().toLowerCase() &&
+        item.dueDate == dueDate,
+  );
   }
 
   @override
