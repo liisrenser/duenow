@@ -19,4 +19,22 @@ class ToDo {
       ToDo(id: '04', todoText: 'Team Meeting'),
     ];
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'todoText': todoText,
+      'dueDate': dueDate,
+      'isDone': isDone,
+    };
+  }
+
+  factory ToDo.fromJson(Map<String, dynamic> json) {
+    return ToDo(
+      id: json['id'],
+      todoText: json['todoText'],
+      dueDate: json['dueDate'],
+      isDone: json['isDone'] ?? false,
+    );
+  }
 }
