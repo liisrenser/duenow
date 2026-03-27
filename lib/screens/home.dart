@@ -31,6 +31,18 @@ class _HomeScreenState extends State<HomeScreen> {
   void _addToDoItem(String toDo) {
     if (toDo.trim().isEmpty) return;
 
+    final selectedDueDate =
+      _dateController.text.isEmpty ? null : _dateController.text;
+
+    if (_isDuplicateTask(toDo, selectedDueDate)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('This task already exists for the selected date'),
+        ),
+      );
+      return;
+    }
+
     setState(() {
       todosList.add(
         ToDo(
@@ -74,6 +86,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return dateA.compareTo(dateB);
     });
+  }
+
+  bool _isDuplicateTask(String toDo, String? dueDate) {
+  return todosList.any(
+    (item) =>
+        item.todoText!.trim().toLowerCase() == toDo.trim().toLowerCase() &&
+        item.dueDate == dueDate,
+  );
   }
 
   @override
