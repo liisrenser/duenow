@@ -38,6 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
           dueDate: _dateController.text.isEmpty ? null : _dateController.text,
         ),
       );
+      _sortToDos();
     });
     _toDoController.clear();
     _dateController.clear();
@@ -56,6 +57,19 @@ class _HomeScreenState extends State<HomeScreen> {
         _dateController.text = _picked.toString().split(" ")[0];
       });
     }
+  }
+
+  void _sortToDos() {
+    todosList.sort((a, b) {
+    if (a.dueDate == null && b.dueDate == null) return 0;
+    if (a.dueDate == null) return 1;
+    if (b.dueDate == null) return -1;
+
+    final dateA = DateTime.parse(a.dueDate!);
+    final dateB = DateTime.parse(b.dueDate!);
+
+    return dateA.compareTo(dateB);
+    });
   }
 
   @override
