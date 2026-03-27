@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:duenow/widgets/todoitem.dart';
 import 'package:duenow/model/todo.dart';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,18 +16,21 @@ class _HomeScreenState extends State<HomeScreen> {
   final todosList = ToDo.todoList();
   final _toDoController = TextEditingController();
   TextEditingController _dateController = TextEditingController();
+  static const String _storageKey = 'todos';
 
   void _handleToDoChange(ToDo todo) {
     setState(() {
       todo.isDone = !todo.isDone;
       _sortToDos();
     });
+    _saveToDos();
   }
 
   void _deleteToDoItem(String id) {
     setState(() {
       todosList.removeWhere((item) => item.id == id);
     });
+    _saveToDos();
   }
 
   void _addToDoItem(String toDo) {
@@ -55,6 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
     _toDoController.clear();
     _dateController.clear();
+    _saveToDos();
   }
 
   Future<void> _selectDate() async {
@@ -96,6 +102,39 @@ class _HomeScreenState extends State<HomeScreen> {
   );
   }
 
+  Future<void> _saveToDos() async {
+  final prefs = SharedPreferencesAsync();
+  final List<String> todoJsonList =
+      todosList.map((todo) => jsonEncode(todo.toJson())).toList();
+
+  await prefs.setStringList(_storageKey, todoJsonList);
+  }
+
+  Future<void> _loadToDos() async {
+    final prefs = SharedPreferencesAsync();
+    final List<String>? todoJsonList = await prefs.getStringList(_storageKey);
+
+    if (todoJsonList != null && todoJsonList.isNotEmpty) {
+      setState(() {
+        todosList.clear();
+        todosList.addAll(
+          todoJsonList.map((item) => ToDo.fromJson(jsonDecode(item))).toList(),
+        );
+        _sortToDos();
+      });
+      } else {
+      setState(() {
+        _sortToDos();
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadToDos();
+  }
+
   @override
   void dispose() {
     _toDoController.dispose();
@@ -112,11 +151,12 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Scaffold(
         appBar: AppBar(
           elevation: 0,
-          backgroundColor: const Color(0xFFFFC4C4),
+          backgroundColor: const Color(0xFFFF869E),
           title: Text(
             'DueNow',
             style: GoogleFonts.merriweather(
               fontSize: 30,
+              color: Color(0xFFFFE7BF)
             ),
           ),
         ),
@@ -124,16 +164,24 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Container(
               margin: const EdgeInsets.only(bottom: 20),
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(12),
               width: double.infinity,
               decoration: const BoxDecoration(
-                color: Color(0xFFFFE7BF),
+                color: Color(0xFFFFC4C4),
+                boxShadow: const [
+                            BoxShadow(
+                              color: Color(0xFFFF869E),
+                              blurRadius: 5,
+                              spreadRadius: 0,
+                            ),
+                          ],
               ),
               child: Text(
                 'All TODOs',
+                textAlign: TextAlign.center,
                 style: GoogleFonts.merriweather(
                   fontSize: 25,
-                  color: Colors.black,
+                  color: Color(0xFFA10035),
                 ),
               ),
             ),
@@ -168,7 +216,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: const [
                             BoxShadow(
-                              color: Colors.grey,
+                              color: Color(0xFFFF869E),
                               blurRadius: 10,
                               spreadRadius: 0,
                             ),
@@ -192,6 +240,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                                 IconButton(
                                   icon: const Icon(Icons.calendar_today),
+                                  color: Color(0xFFA10035),
                                   onPressed: () {
                                     _selectDate();
                                   },
@@ -223,7 +272,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         borderRadius: BorderRadius.circular(8),
                         boxShadow: const [
                           BoxShadow(
-                            color: Colors.grey,
+                            color: Color(0xFFFF869E),
                             blurRadius: 10,
                             spreadRadius: 0,
                           ),
