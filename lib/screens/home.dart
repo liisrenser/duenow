@@ -13,6 +13,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final todosList = ToDo.todoList();
   final _toDoController = TextEditingController();
+  TextEditingController _dateController = TextEditingController();
 
   void _handleToDoChange(ToDo todo) {
     setState(() {
@@ -38,6 +39,22 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     });
     _toDoController.clear();
+    _dateController.clear();
+  }
+
+  Future<void> _selectDate() async {
+    DateTime? _picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2026),
+      lastDate: DateTime(2100)
+    );
+
+    if (_picked != null) {
+      setState(() {
+        _dateController.text = _picked.toString().split(" ")[0];
+      });
+    }
   }
 
   @override
@@ -105,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Container(
                         margin: const EdgeInsets.only(bottom: 20),
                         padding: const EdgeInsets.symmetric(horizontal: 14),
-                        height: 55,
+                        height: 70,
                         decoration: BoxDecoration(
                           color: const Color(0xFFFFC4C4),
                           borderRadius: BorderRadius.circular(12),
@@ -117,12 +134,42 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ],
                         ),
-                        child: TextField(
-                          controller: _toDoController,
-                          decoration: const InputDecoration(
-                            hintText: 'Add a new todo item',
-                            border: InputBorder.none,
-                          ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _toDoController,
+                                    decoration: const InputDecoration(
+                                      hintText: 'Add a new todo item',
+                                      border: InputBorder.none,
+                                      isCollapsed: true,
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.calendar_today),
+                                  onPressed: () {
+                                    _selectDate();
+                                  },
+                                ),
+                              ],
+                            ),
+                            if (_dateController.text.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text(
+                                  'Due: ${_dateController.text}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                     ),
