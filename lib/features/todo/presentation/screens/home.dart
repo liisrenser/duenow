@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:duenow/widgets/todoitem.dart';
-import 'package:duenow/model/todo.dart';
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../data/todostorage.dart';
+import '../../logic/todocontroller.dart';
+import '../../models/todo.dart';
+import '../widgets/todoitem.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,33 +13,35 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final todosList = ToDo.todoList();
-  final _toDoController = TextEditingController();
-  TextEditingController _dateController = TextEditingController();
-  static const String _storageKey = 'todos';
+  final TodoController _controller =
+      TodoController(storage: TodoStorage());
+
+  final TextEditingController _toDoController = TextEditingController();
+  final TextEditingController _dateController = TextEditingController();
+
+  List<ToDo> get todosList => _controller.todosList;
 
   void _handleToDoChange(ToDo todo) {
     setState(() {
-      todo.isDone = !todo.isDone;
-      _sortToDos();
+      _controller.handleToDoChange(todo);
     });
-    _saveToDos();
+    _controller.saveToDos();
   }
 
   void _deleteToDoItem(String id) {
     setState(() {
-      todosList.removeWhere((item) => item.id == id);
+      _controller.deleteToDoItem(id);
     });
-    _saveToDos();
+    _controller.saveToDos();
   }
 
   void _addToDoItem(String toDo) {
     if (toDo.trim().isEmpty) return;
 
     final selectedDueDate =
-      _dateController.text.isEmpty ? null : _dateController.text;
+        _dateController.text.isEmpty ? null : _dateController.text;
 
-    if (_isDuplicateTask(toDo, selectedDueDate)) {
+    if (_controller.isDuplicateTask(toDo, selectedDueDate)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('This task already exists for the selected date'),
@@ -49,84 +51,32 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     setState(() {
-      todosList.add(
-        ToDo(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          todoText: toDo,
-          dueDate: _dateController.text.isEmpty ? null : _dateController.text,
-        ),
-      );
-      _sortToDos();
+      _controller.addToDoItem(toDo, selectedDueDate);
     });
+
     _toDoController.clear();
     _dateController.clear();
-    _saveToDos();
+    _controller.saveToDos();
   }
 
   Future<void> _selectDate() async {
-    DateTime? _picked = await showDatePicker(
+    DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime(2026),
-      lastDate: DateTime(2100)
+      lastDate: DateTime(2100),
     );
 
-    if (_picked != null) {
+    if (picked != null) {
       setState(() {
-        _dateController.text = _picked.toString().split(" ")[0];
+        _dateController.text = picked.toString().split(" ")[0];
       });
     }
-  }
-
-  void _sortToDos() {
-    todosList.sort((a, b) {
-      if (a.isDone != b.isDone) {
-      return a.isDone ? 1 : -1;
-    }
-    if (a.dueDate == null && b.dueDate == null) return 0;
-    if (a.dueDate == null) return 1;
-    if (b.dueDate == null) return -1;
-
-    final dateA = DateTime.parse(a.dueDate!);
-    final dateB = DateTime.parse(b.dueDate!);
-
-    return dateA.compareTo(dateB);
-    });
-  }
-
-  bool _isDuplicateTask(String toDo, String? dueDate) {
-  return todosList.any(
-    (item) =>
-        item.todoText!.trim().toLowerCase() == toDo.trim().toLowerCase() &&
-        item.dueDate == dueDate,
-  );
-  }
-
-  Future<void> _saveToDos() async {
-  final prefs = SharedPreferencesAsync();
-  final List<String> todoJsonList =
-      todosList.map((todo) => jsonEncode(todo.toJson())).toList();
-
-  await prefs.setStringList(_storageKey, todoJsonList);
   }
 
   Future<void> _loadToDos() async {
-    final prefs = SharedPreferencesAsync();
-    final List<String>? todoJsonList = await prefs.getStringList(_storageKey);
-
-    if (todoJsonList != null && todoJsonList.isNotEmpty) {
-      setState(() {
-        todosList.clear();
-        todosList.addAll(
-          todoJsonList.map((item) => ToDo.fromJson(jsonDecode(item))).toList(),
-        );
-        _sortToDos();
-      });
-      } else {
-      setState(() {
-        _sortToDos();
-      });
-    }
+    await _controller.loadToDos();
+    setState(() {});
   }
 
   @override
@@ -156,7 +106,7 @@ class _HomeScreenState extends State<HomeScreen> {
             'DueNow',
             style: GoogleFonts.merriweather(
               fontSize: 30,
-              color: Color(0xFFFFE7BF)
+              color: const Color(0xFFFFE7BF),
             ),
           ),
         ),
@@ -168,20 +118,20 @@ class _HomeScreenState extends State<HomeScreen> {
               width: double.infinity,
               decoration: const BoxDecoration(
                 color: Color(0xFFFFC4C4),
-                boxShadow: const [
-                            BoxShadow(
-                              color: Color(0xFFFF869E),
-                              blurRadius: 5,
-                              spreadRadius: 0,
-                            ),
-                          ],
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0xFFFF869E),
+                    blurRadius: 5,
+                    spreadRadius: 0,
+                  ),
+                ],
               ),
               child: Text(
                 'All TODOs',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.merriweather(
                   fontSize: 25,
-                  color: Color(0xFFA10035),
+                  color: const Color(0xFFA10035),
                 ),
               ),
             ),
@@ -240,7 +190,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                                 IconButton(
                                   icon: const Icon(Icons.calendar_today),
-                                  color: Color(0xFFA10035),
+                                  color: const Color(0xFFA10035),
                                   onPressed: () {
                                     _selectDate();
                                   },

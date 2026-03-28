@@ -1,37 +1,40 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:duenow/model/todo.dart';
-
+import '../../models/todo.dart';
 
 class ToDoItem extends StatelessWidget {
   final ToDo todo;
-  final onToDoChanged;
-  final onDeleteItem;
+  final ValueChanged<ToDo> onToDoChanged;
+  final ValueChanged<String> onDeleteItem;
 
-  const ToDoItem({Key? key, required this.todo, required this.onDeleteItem, required this.onToDoChanged}) : super(key: key);
+  const ToDoItem({
+    Key? key,
+    required this.todo,
+    required this.onDeleteItem,
+    required this.onToDoChanged,
+  }) : super(key: key);
 
   Color? _getDueDateColor(String? dueDate) {
-  if (dueDate == null || dueDate.isEmpty) return null;
+    if (dueDate == null || dueDate.isEmpty) return null;
 
-  final due = DateTime.parse(dueDate);
-  final now = DateTime.now();
+    final due = DateTime.parse(dueDate);
+    final now = DateTime.now();
 
-  final difference = due.difference(now).inDays;
+    final difference = due.difference(now).inDays;
 
-  if (difference <= 2) {
-    return const Color.fromARGB(255, 249, 36, 20);
-  } else if (difference <= 6) {
-    return const Color.fromARGB(255, 255, 232, 27);
+    if (difference <= 2) {
+      return const Color.fromARGB(255, 249, 36, 20);
+    } else if (difference <= 6) {
+      return const Color.fromARGB(255, 255, 232, 27);
+    }
+
+    return null;
   }
 
-  return null;
-  }
-  
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(bottom: 20),
+      margin: const EdgeInsets.only(bottom: 20),
       child: ListTile(
         onTap: () {
           onToDoChanged(todo);
@@ -39,7 +42,7 @@ class ToDoItem extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
         tileColor: Colors.white,
         leading: Row(
           mainAxisSize: MainAxisSize.min,
@@ -48,11 +51,9 @@ class ToDoItem extends StatelessWidget {
               todo.isDone
                   ? Icons.check_box
                   : Icons.check_box_outline_blank,
-              color: Color(0xFFA10035),
+              color: const Color(0xFFA10035),
             ),
-
             const SizedBox(width: 6),
-
             if (_getDueDateColor(todo.dueDate) != null)
               Container(
                 width: 10,
@@ -68,9 +69,10 @@ class ToDoItem extends StatelessWidget {
           todo.todoText!,
           style: GoogleFonts.merriweather(
             fontSize: 16,
-            decoration: todo.isDone? TextDecoration.lineThrough: null,
-          )),
-          subtitle: todo.dueDate != null && todo.dueDate!.isNotEmpty
+            decoration: todo.isDone ? TextDecoration.lineThrough : null,
+          ),
+        ),
+        subtitle: todo.dueDate != null && todo.dueDate!.isNotEmpty
             ? Text(
                 'Due: ${todo.dueDate}',
                 style: const TextStyle(
@@ -79,23 +81,23 @@ class ToDoItem extends StatelessWidget {
                 ),
               )
             : null,
-          trailing: Container(
-            height: 35,
-            width: 35,
-            decoration: BoxDecoration(
-              color: Color(0xFFA10035),
-              borderRadius: BorderRadius.circular(5),
-            ),
-            child: IconButton(
-              color: Colors.white,
-              iconSize: 18,
-              icon: Icon(Icons.delete),
-              onPressed: () {
-                onDeleteItem(todo.id);
-              },
-            )
-          )
-      )
-      );
+        trailing: Container(
+          height: 35,
+          width: 35,
+          decoration: BoxDecoration(
+            color: const Color(0xFFA10035),
+            borderRadius: BorderRadius.circular(5),
+          ),
+          child: IconButton(
+            color: Colors.white,
+            iconSize: 18,
+            icon: const Icon(Icons.delete),
+            onPressed: () {
+              onDeleteItem(todo.id!);
+            },
+          ),
+        ),
+      ),
+    );
   }
 }
